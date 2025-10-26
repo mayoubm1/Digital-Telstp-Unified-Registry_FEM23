@@ -15,7 +15,7 @@ export default function App() {
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [error, setError] = useState<string>('');
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const API_BASE = import.meta.env.VITE_API_URL || 'https://vrfyjirddfdnwuffzqhb.supabase.co/functions/v1/api';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,7 +64,7 @@ export default function App() {
               <Globe className="w-8 h-8 text-cyan-400" />
               <div>
                 <h1 className="text-2xl font-bold text-white">TELsTP OmniCognitor</h1>
-                <p className="text-sm text-slate-400">Unified AI Platform</p>
+                <p className="text-sm text-slate-400">Unified AI Platform - MMAC Edition</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -166,6 +166,16 @@ export default function App() {
                 </div>
               )}
             </div>
+
+            {/* Footer Info */}
+            <div className="mt-8 bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-lg p-4 text-center">
+              <p className="text-slate-400 text-sm">
+                Deployed by <span className="text-cyan-400 font-bold">MMAC - Manus Mission Accomplished</span>
+              </p>
+              <p className="text-slate-500 text-xs mt-1">
+                Backend: Supabase Edge Functions (100% Free) | Frontend: GitHub Pages (100% Free)
+              </p>
+            </div>
           </>
         )}
       </main>
@@ -173,7 +183,7 @@ export default function App() {
       {/* Footer */}
       <footer className="border-t border-slate-700/50 mt-12 py-6 px-4">
         <div className="max-w-7xl mx-auto text-center text-slate-400 text-sm">
-          <p>TELsTP OmniCognitor MVP • Connected to Supabase • {new Date().toLocaleString()}</p>
+          <p>TELsTP OmniCognitor MVP • Zero Cost • {new Date().toLocaleString()}</p>
         </div>
       </footer>
     </div>
