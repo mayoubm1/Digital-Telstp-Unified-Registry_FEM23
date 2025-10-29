@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/Digital-Telstp-Unified-Registry_FEM23/',
+  // base: '/Digital-Telstp-Unified-Registry_FEM23/', //
   server: {
     port: 5173,
     host: '0.0.0.0'
