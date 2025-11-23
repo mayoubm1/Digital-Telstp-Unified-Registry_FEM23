@@ -8,18 +8,16 @@ interface ApiResponse {
   error?: string;
 }
 
+// Environment variables are declared outside the component or at the top level
+const API_BASE = import.meta.env.VITE_API_URL || 'https://telstp-ai-agent-globe.vercel.app';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY; // <-- CORRECT LOCATION
+
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>({});
   const [platforms, setPlatforms] = useState<any[]>([]);
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [error, setError] = useState<string>('');
-
-  const API_BASE = import.meta.env.VITE_API_URL || 'https://telstp-ai-agent-globe.vercel.app';
-
-  useEffect(() => {
-  const API_BASE = import.meta.env.VITE_API_URL || 'https://telstp-ai-agent-globe.vercel.app';
-  const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY; // <-- NEW LINE
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,30 +29,30 @@ export default function App() {
         const api = axios.create({
           baseURL: API_BASE,
           headers: {
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, // <-- ADDED HEADER
+            // Use the Anon Key for initial unauthenticated access to the Edge Function
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 
             'Content-Type': 'application/json',
           },
         });
 
         // Fetch stats
-        const statsRes = await api.get(`/stats`); // <-- Changed to use 'api' instance
+        const statsRes = await api.get(`/stats`); 
         if (statsRes.data.success) {
           setStats(statsRes.data.stats);
         }
 
         // Fetch platforms
-        const platformsRes = await api.get(`/platforms`); // <-- Changed to use 'api' instance
+        const platformsRes = await api.get(`/platforms`); 
         if (platformsRes.data.success) {
           setPlatforms(platformsRes.data.data || []);
         }
 
         // Fetch workspaces
-        const workspacesRes = await api.get(`/workspaces`); // <-- Changed to use 'api' instance
+        const workspacesRes = await api.get(`/workspaces`); 
         if (workspacesRes.data.success) {
           setWorkspaces(workspacesRes.data.data || []);
         }
       } catch (err: any) {
-        // The 401 error will now be caught here. We can make the error message more user-friendly.
         let errorMessage = 'Failed to fetch data';
         if (err.response && err.response.status === 401) {
           errorMessage = 'Authentication Error: Supabase Anon Key may be invalid or missing.';
@@ -72,8 +70,10 @@ export default function App() {
     // Refresh every 30 seconds
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
+
   return (
+    // ... (Rest of the JSX remains the same)
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
       <header className="bg-slate-900/50 backdrop-blur-md border-b border-slate-700/50 sticky top-0 z-50">
@@ -208,4 +208,3 @@ export default function App() {
     </div>
   );
 }
-
