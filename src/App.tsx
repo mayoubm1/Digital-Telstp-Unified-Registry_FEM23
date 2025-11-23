@@ -18,30 +18,50 @@ export default function App() {
   const API_BASE = import.meta.env.VITE_API_URL || 'https://telstp-ai-agent-globe.vercel.app';
 
   useEffect(() => {
+  const API_BASE = import.meta.env.VITE_API_URL || 'https://telstp-ai-agent-globe.vercel.app';
+  const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY; // <-- NEW LINE
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError('');
 
+        // CRITICAL FIX: Create an axios instance with the Authorization header
+        const api = axios.create({
+          baseURL: API_BASE,
+          headers: {
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, // <-- ADDED HEADER
+            'Content-Type': 'application/json',
+          },
+        });
+
         // Fetch stats
-        const statsRes = await axios.get(`${API_BASE}/stats`);
+        const statsRes = await api.get(`/stats`); // <-- Changed to use 'api' instance
         if (statsRes.data.success) {
           setStats(statsRes.data.stats);
         }
 
         // Fetch platforms
-        const platformsRes = await axios.get(`${API_BASE}/platforms`);
+        const platformsRes = await api.get(`/platforms`); // <-- Changed to use 'api' instance
         if (platformsRes.data.success) {
           setPlatforms(platformsRes.data.data || []);
         }
 
         // Fetch workspaces
-        const workspacesRes = await axios.get(`${API_BASE}/workspaces`);
+        const workspacesRes = await api.get(`/workspaces`); // <-- Changed to use 'api' instance
         if (workspacesRes.data.success) {
           setWorkspaces(workspacesRes.data.data || []);
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to fetch data');
+        // The 401 error will now be caught here. We can make the error message more user-friendly.
+        let errorMessage = 'Failed to fetch data';
+        if (err.response && err.response.status === 401) {
+          errorMessage = 'Authentication Error: Supabase Anon Key may be invalid or missing.';
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+        setError(errorMessage);
         console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
@@ -53,7 +73,6 @@ export default function App() {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
