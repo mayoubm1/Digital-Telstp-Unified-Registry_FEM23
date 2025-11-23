@@ -74,7 +74,7 @@ VITE_SUPABASE_URL=https://vrfyjirddfdnwuffzqhb.supabase.co
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 # API Base URL
-VITE_API_URL=https://vrfyjirddfdnwuffzqhb.supabase.co/functions/v1/api
+VITE_API_URL=https://telstp-ai-agent-globe.vercel.app
 ```
 
 For production deployment on Vercel, these are already configured in `vercel.json`.
@@ -130,7 +130,7 @@ vercel --prod
    ```
    VITE_SUPABASE_URL=https://vrfyjirddfdnwuffzqhb.supabase.co
    VITE_SUPABASE_ANON_KEY=your_key
-   VITE_API_URL=https://vrfyjirddfdnwuffzqhb.supabase.co/functions/v1/api
+   VITE_API_URL=https://telstp-ai-agent-globe.vercel.app
    ```
 6. Click "Deploy"
 
@@ -176,7 +176,7 @@ http://localhost:54321/functions/v1/api
 
 ### Production
 ```
-https://vrfyjirddfdnwuffzqhb.supabase.co/functions/v1/api
+https://telstp-ai-agent-globe.vercel.app
 ```
 
 ### Available Endpoints
@@ -262,7 +262,7 @@ npm run build
 1. Check `.env.local` has correct API URL
 2. Verify backend is deployed and running
 3. Check browser console for CORS errors
-4. Test API directly: `curl https://vrfyjirddfdnwuffzqhb.supabase.co/functions/v1/api/health`
+4. Test API directly: `curl https://telstp-ai-agent-globe.vercel.app/health`
 
 ### Vercel Deployment Issues
 

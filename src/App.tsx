@@ -15,7 +15,7 @@ export default function App() {
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [error, setError] = useState<string>('');
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'https://vrfyjirddfdnwuffzqhb.supabase.co/functions/v1/api';
+  const API_BASE = import.meta.env.VITE_API_URL || 'https://telstp-ai-agent-globe.vercel.app';
 
   useEffect(() => {
     const fetchData = async () => {
