@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Globe, Users, MessageSquare, Zap, Activity } from 'lucide-react';
+import { Globe, Users, MessageSquare, Zap, Activity, LogIn } from 'lucide-react';
 
 interface ApiResponse {
   success: boolean;
@@ -12,11 +12,45 @@ interface ApiResponse {
 const API_BASE = import.meta.env.VITE_API_URL || 'https://telstp-ai-agent-globe.vercel.app';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY; // <-- CORRECT LOCATION
 
+// New AuthButton Component
+const AuthButton = () => {
+  // Placeholder for future authentication state (e.g., from a context or global store)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const handleAuthClick = () => {
+    if (isAuthenticated) {
+      // Future: Implement sign out logic
+      alert('Signing out...');
+      setIsAuthenticated(false);
+    } else {
+      // Future: Implement sign in logic (e.g., redirect to Supabase Auth UI)
+      alert('Redirecting to Sign In/Hub Access...');
+      setIsAuthenticated(true); // Mock sign in for now
+    }
+  };
+
+  return (
+    <button 
+      onClick={handleAuthClick}
+      className="ml-4 px-3 py-1 text-sm font-medium text-white bg-cyan-600 rounded-md hover:bg-cyan-700 transition-colors flex items-center gap-1"
+    >
+      <LogIn className="w-4 h-4" />
+      {isAuthenticated ? 'Sign Out' : 'Sign In / Hub Access'}
+    </button>
+  );
+};
+
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>({});
   const [platforms, setPlatforms] = useState<any[]>([]);
   const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [isWorkspaceActive, setIsWorkspaceActive] = useState<number | null>(null);
+
+  const handleWorkspaceClick = (id: number, name: string) => {
+    setIsWorkspaceActive(id);
+    alert(`Navigating to workspace: ${name}`);
+  };
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
@@ -89,6 +123,7 @@ export default function App() {
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-green-400" />
               <span className="text-sm text-green-400 font-medium">Live</span>
+              <AuthButton />
             </div>
           </div>
         </div>
@@ -120,6 +155,17 @@ export default function App() {
                 { label: 'Messages', value: stats.messages || 0, icon: MessageSquare, color: 'green' },
                 { label: 'Conversations', value: stats.conversations || 0, icon: Activity, color: 'orange' },
               ].map((stat) => {
+                // Check if all stats are zero to display a helpful message
+                const allStatsZero = Object.values(stats).every(val => val === 0 || val === null || val === undefined);
+                if (allStatsZero && stat.label === 'Users') {
+                  return (
+                    <div key="empty-stats" className="col-span-5 bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-lg p-6 text-center">
+                      <p className="text-slate-400">Backend data is currently empty. Connect your Supabase tables to the Next.js backend to see real-time stats.</p>
+                    </div>
+                  );
+                }
+                if (allStatsZero) return null; // Hide other zero-stats when all are zero
+
                 const Icon = stat.icon;
                 return (
                   <div key={stat.label} className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-lg p-6 hover:border-slate-600/50 transition">
@@ -146,7 +192,7 @@ export default function App() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {platforms.slice(0, 8).map((platform) => (
-                    <div key={platform.id} className="bg-slate-700/50 rounded-lg p-4 border border-slate-600/50">
+                    <div key={platform.id} className="bg-slate-700/50 rounded-lg p-4 border border-slate-600/50 hover:border-slate-500/50 transition cursor-pointer">
                       <p className="font-semibold text-white">{platform.name}</p>
                       <p className="text-xs text-slate-400 mt-1">{platform.type}</p>
                       <div className="mt-3 flex items-center gap-2">
@@ -170,7 +216,11 @@ export default function App() {
               ) : (
                 <div className="space-y-3">
                   {workspaces.slice(0, 5).map((workspace) => (
-                    <div key={workspace.id} className="bg-slate-700/50 rounded-lg p-4 border border-slate-600/50 hover:border-slate-500/50 transition">
+                    <div 
+                      key={workspace.id} 
+                      className={`bg-slate-700/50 rounded-lg p-4 border transition cursor-pointer ${isWorkspaceActive === workspace.id ? 'border-cyan-500 ring-2 ring-cyan-500/50' : 'border-slate-600/50 hover:border-slate-500/50'}`}
+                      onClick={() => handleWorkspaceClick(workspace.id, workspace.name)}
+                    >
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-semibold text-white">{workspace.name}</p>
