@@ -5,42 +5,48 @@ import { Globe, Users, MessageSquare, Zap, Activity, LogIn } from 'lucide-react'
 interface ApiResponse {
   success: boolean;
   data?: any[];
-  error?: string;
-}
+  error?: stri// Environment variables are declared outside the component or at the top level
+const API_BASE = import.meta.env.VITE_API_URL || 'https://telstp-ai-agent-globe.vercel.app';import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Environment variables are declared outside the component or at the top level
-const API_BASE = import.meta.env.VITE_API_URL || 'https://telstp-ai-agent-globe.vercel.app';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY; // <-- CORRECT LOCATION
 
-// New AuthButton Component
-const AuthButton = () => {
-  // Placeholder for future authentication state (e.g., from a context or global store)
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+// AuthButton Component is now part of App to use the session state.
+
+import { createClient } from '@supabase/supabase-js';
+import Auth from './Auth';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+export default function App() {
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleAuthClick = () => {
-    if (isAuthenticated) {
-      // Future: Implement sign out logic
-      alert('Signing out...');
-      setIsAuthenticated(false);
+    if (session) {
+      supabase.auth.signOut();
     } else {
-      // Future: Implement sign in logic (e.g., redirect to Supabase Auth UI)
+      // This should not be reached if conditional rendering works, but kept for safety
       alert('Redirecting to Sign In/Hub Access...');
-      setIsAuthenticated(true); // Mock sign in for now
     }
   };
 
-  return (
-    <button 
-      onClick={handleAuthClick}
-      className="ml-4 px-3 py-1 text-sm font-medium text-white bg-cyan-600 rounded-md hover:bg-cyan-700 transition-colors flex items-center gap-1"
-    >
-      <LogIn className="w-4 h-4" />
-      {isAuthenticated ? 'Sign Out' : 'Sign In / Hub Access'}
-    </button>
-  );
-};
-
-export default function App() {
+  if (!session) {
+    return <Auth />;
+  }
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>({});
   const [platforms, setPlatforms] = useState<any[]>([]);
@@ -123,7 +129,13 @@ export default function App() {
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-green-400" />
               <span className="text-sm text-green-400 font-medium">Live</span>
-              <AuthButton />
+              <button 
+              onClick={handleAuthClick}
+              className="ml-4 px-3 py-1 text-sm font-medium text-white bg-cyan-600 rounded-md hover:bg-cyan-700 transition-colors flex items-center gap-1"
+            >
+              <LogIn className="w-4 h-4" />
+              {session ? 'Sign Out' : 'Sign In / Hub Access'}
+            </button>
             </div>
           </div>
         </div>
