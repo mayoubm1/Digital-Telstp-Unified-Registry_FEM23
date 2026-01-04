@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Search, Loader2 } from 'lucide-react';
 
 // The API base URL is fetched from the environment variable VITE_API_URL
-const API_BASE = import.meta.env.VITE_API_URL || 'https://telstp-ai-agent-globe.vercel.app';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://telstp-m23m-hub.vercel.app'; // Updated to new dedicated M2-3M Hub URL
 
 interface Publication {
   title: string;
