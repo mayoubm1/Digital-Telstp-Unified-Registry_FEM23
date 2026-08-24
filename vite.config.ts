@@ -1,13 +1,11 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  // The isolated candidate must not inherit checked-in service targets.
+  // Vercel or another approved runtime may still supply explicit environment values.
+  envFile: false,
   plugins: [react()],
-  // base: '/Digital-Telstp-Unified-Registry_FEM23/', //
-  server: {
-    port: 5173,
-    host: '0.0.0.0'
-  },
   build: {
     outDir: 'dist',
     sourcemap: false,
@@ -17,9 +15,8 @@ export default defineConfig({
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
           'ui-vendor': ['lucide-react'],
-        }
-      }
-    }
-  }
-})
-
+        },
+      },
+    },
+  },
+});

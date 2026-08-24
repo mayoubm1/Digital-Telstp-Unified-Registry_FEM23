@@ -1,116 +1,168 @@
-import React, { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import axios from 'axios';
-import { Search, Loader2 } from 'lucide-react';
+import { BookOpenText, LoaderCircle, Send, ShieldCheck } from 'lucide-react';
 
-// The API base URL is fetched from the environment variable VITE_API_URL
-const API_BASE = import.meta.env.VITE_API_URL || 'https://telstp-m23m-hub.vercel.app'; // Updated to new dedicated M2-3M Hub URL
-
-interface Publication {
+interface PublicationReference {
+  id: string;
   title: string;
-  abstract: string;
+  authors?: string | null;
+  year?: number | null;
+  doi?: string | null;
 }
 
 interface AnalysisResult {
-  summary: string;
-  publications: Publication[];
+  query: string;
+  analysis: string;
+  pillar: string;
+  publications_used: PublicationReference[];
+  publications_count: number;
+  model_used: string;
+  timestamp: string;
+  persistence: 'disabled';
 }
 
-const M23MAnalyzer: React.FC = () => {
-  const [query, setQuery] = useState('');
-  const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface M23MAnalyzerProps {
+  apiBase: string;
+  accessToken: string;
+}
 
-  const analyzeResearch = async (researchQuery: string) => {
+const pillars = [
+  { value: 'general', label: 'General research' },
+  { value: 'research', label: 'Life sciences' },
+  { value: 'quantum-biology', label: 'Quantum biology' },
+  { value: 'genomics', label: 'Genomics' },
+  { value: 'neuroscience', label: 'Neuroscience' },
+  { value: 'telemedicine', label: 'Telemedicine innovation' },
+  { value: 'education', label: 'Education and knowledge' },
+];
+
+function messageFromError(error: unknown) {
+  if (axios.isAxiosError(error)) {
+    return error.response?.data?.message || 'M2-3M could not process this request. Please try again later.';
+  }
+  return 'M2-3M could not process this request. Please try again later.';
+}
+
+export default function M23MAnalyzer({ apiBase, accessToken }: M23MAnalyzerProps) {
+  const [query, setQuery] = useState('');
+  const [context, setContext] = useState('');
+  const [pillar, setPillar] = useState('general');
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!query.trim() || loading) return;
+
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      // POST request to the new backend endpoint: /m23m/analyze
-      const response = await axios.post(`${API_BASE}/m23m/analyze`, { query: researchQuery });
-      
-      if (response.data.success) {
-        setResult(response.data.data);
-      } else {
-        setError(response.data.message || 'Analysis failed with an unknown error.');
+      const response = await axios.post<{ success: boolean; data: AnalysisResult }>(
+        `${apiBase.replace(/\/$/, '')}/m23m/analyze`,
+        { query: query.trim(), context: context.trim(), pillar },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 25_000,
+        },
+      );
+
+      if (!response.data.success || !response.data.data) {
+        throw new Error('M2-3M returned an invalid response.');
       }
-    } catch (err) {
-      console.error("M2-3M Frontend Error:", err);
-      setError('Failed to connect to the M2-3M analysis service. Please check the network connection.');
+
+      setResult(response.data.data);
+    } catch (requestError) {
+      setError(messageFromError(requestError));
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim()) {
-      analyzeResearch(query.trim());
-    }
-  };
+  }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-xl">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-        <Search className="w-6 h-6 mr-2 text-blue-600" />
-        M2-3M Research Analyzer
-      </h2>
-      <p className="text-gray-600 mb-6">
-        Input your research query to receive a deep analysis based on the internal TELsTP publications database.
-      </p>
+    <section className="analyzer-panel" aria-labelledby="m23m-title">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">M2-3M research engine</p>
+          <h2 id="m23m-title">Evidence-aware analysis</h2>
+          <p className="section-copy">
+            Explore approved TELsTP research themes. The isolated candidate never stores an analysis from this screen.
+          </p>
+        </div>
+        <div className="status-chip"><ShieldCheck size={16} /> Authenticated session</div>
+      </div>
 
-      <form onSubmit={handleSubmit} className="flex space-x-3 mb-8">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Enter your research query..."
-          className="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-          disabled={loading}
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-150 disabled:bg-blue-400 flex items-center justify-center"
-          disabled={loading}
-        >
-          {loading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <>
-              <Search className="w-5 h-5 mr-2" />
-              Analyze
-            </>
-          )}
-        </button>
+      <form className="analysis-form" onSubmit={handleSubmit}>
+        <label>
+          Research question
+          <textarea
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            maxLength={1200}
+            required
+            rows={5}
+            placeholder="For example: What evidence would be needed to evaluate quantum effects in biological energy transfer?"
+          />
+          <span className="field-help">{query.length}/1200 characters</span>
+        </label>
+
+        <div className="form-grid">
+          <label>
+            Research pillar
+            <select value={pillar} onChange={(event) => setPillar(event.target.value)}>
+              {pillars.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            </select>
+          </label>
+          <label>
+            Optional context
+            <input
+              value={context}
+              onChange={(event) => setContext(event.target.value)}
+              maxLength={2000}
+              placeholder="Scope, intended audience, or research goal"
+            />
+          </label>
+        </div>
+
+        <div className="form-footer">
+          <p><BookOpenText size={17} /> Responses are grounded in approved references when the protected research provider is activated.</p>
+          <button className="primary-button" type="submit" disabled={loading || !query.trim()}>
+            {loading ? <LoaderCircle className="spin" size={18} /> : <Send size={18} />}
+            {loading ? 'Preparing analysis…' : 'Analyze with M2-3M'}
+          </button>
+        </div>
       </form>
 
-      {error && (
-        <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg mb-4">
-          <p className="font-semibold">Error:</p>
-          <p>{error}</p>
-        </div>
-      )}
+      {error && <div className="callout error-callout" role="alert">{error}</div>}
 
       {result && (
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-3">Analysis Report</h3>
-          <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg whitespace-pre-wrap">
-            {result.summary}
+        <article className="analysis-result" aria-live="polite">
+          <div className="result-meta">
+            <span>{result.pillar}</span>
+            <span>{result.publications_count} approved reference{result.publications_count === 1 ? '' : 's'}</span>
+            <span>Persistence: {result.persistence}</span>
           </div>
-
-          <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-2">Referenced Publications</h3>
-          <ul className="list-disc list-inside space-y-2 text-gray-700">
-            {result.publications.map((pub, index) => (
-              <li key={index} className="pl-2">
-                <span className="font-medium">{pub.title}</span>: {pub.abstract.substring(0, 100)}...
-              </li>
-            ))}
-          </ul>
-        </div>
+          <h3>Research brief</h3>
+          <div className="analysis-text">{result.analysis}</div>
+          <h4>Reference trace</h4>
+          {result.publications_used.length ? (
+            <ol className="reference-list">
+              {result.publications_used.map((publication) => (
+                <li key={publication.id}>
+                  <strong>{publication.title}</strong>
+                  {(publication.authors || publication.year) && <span> — {[publication.authors, publication.year].filter(Boolean).join(', ')}</span>}
+                  {publication.doi && <span className="doi"> DOI: {publication.doi}</span>}
+                </li>
+              ))}
+            </ol>
+          ) : <p className="muted">No approved internal references were supplied for this result.</p>}
+        </article>
       )}
-    </div>
+    </section>
   );
-};
-
-export default M23MAnalyzer;
+}
